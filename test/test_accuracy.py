@@ -1,12 +1,18 @@
 import numpy as np
 import pandas as pd
-from xgboost.sklearn import XGBRegressor
+from xgboost.sklearn import XGBClassifier
+from sklearn.preprocessing import LabelEncoder
 import sys
 sys.path.append("/home/nick/Confidence-Intervals/src")
-from rmse import confidence_interval
+from accuracy import confidence_interval
 
 
 data = pd.read_csv("/home/nick/Confidence-Intervals/test/LungCap.csv")
+data["LungCap"] = pd.cut(data["LungCap"], bins=3)  # convert output to categorical
+
+# encode categories into integer labels
+labeler = LabelEncoder()
+data["LungCap"] = labeler.fit_transform(data["LungCap"])
 
 data = data.copy().sample(frac=1, random_state=0).reset_index(drop=True)  # shuffle the data
 train = data.copy().head(int(len(data)*0.5))
@@ -15,7 +21,7 @@ test = data.copy().tail(int(len(data)*0.5))
 X = train.copy().drop(columns="LungCap")
 Y = train.copy()[["LungCap"]]
 
-model = XGBRegressor(
+model = XGBClassifier(
     booster="gbtree",
     n_estimators=100, 
     learning_rate=0.1,
